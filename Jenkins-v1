@@ -1,0 +1,31 @@
+pipeline{
+agent any
+tools {
+maven 'mvn'
+}
+    stages{
+        stage('Build Stage'){
+            steps{
+                echo "Building the Project"
+                sh 'mvn clean package'
+            }
+        }
+        stage('Static Code Analysis'){
+            steps{    
+                echo "Analyzing the code with Sonar"
+            }
+        }
+        stage('Build a Docker Image'){
+            steps{
+                echo "Building the docker Image"
+            }
+        }
+        stage('Going to trigger the Acceptance Pipeline'){
+            steps{
+                echo "Gogiting to trigger the Acceptance Pipeline"
+            
+            }
+        }
+    }
+}
+
