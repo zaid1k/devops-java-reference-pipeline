@@ -12,6 +12,19 @@ maven 'mvn'
                 // it will download various depedency so no need to worry
                 sh 'mvn clean package'
             }
+            //if the above step is sucesful then run the below steps
+            post{
+             success {
+              echo "My project was built succesfully"
+              //we will used in built plugins of jenkins to run the test to archive the ".jar" in workspaces
+              junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+              archiveArtifacts 'target/*.jar'
+             }
+             failure{
+             // send some email to the group,for this we need to setup smtp server
+             echo "My project had compilation issue"
+             }
+            }
         }
         stage('Static Code Analysis'){
             steps{    
