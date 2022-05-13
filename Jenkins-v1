@@ -16,8 +16,11 @@ maven 'mvn'
             post{
              success {
               echo "My project was built succesfully"
-              //we will used in built plugins of jenkins to run the test to archive the ".jar" in workspaces
+  //we will used in built plugins of jenkins to run the test to archive the ".jar" in workspaces
               junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+ //archiving the jar file from the workspaces
+ //generating reports of .jAR archive
+ 
               archiveArtifacts 'target/*.jar'
              }
              failure{
@@ -29,11 +32,15 @@ maven 'mvn'
         stage('Static Code Analysis'){
             steps{    
                 echo "Analyzing the code with Sonar"
+                withSonarQubeEnv('sonarqube'){
+                sh "mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar"
+                }
             }
         }
         stage('Build a Docker Image'){
             steps{
                 echo "Building the docker Image"
+                sh "docker build -t arunstivari/userservice:1.0 ."
             }
         }
         stage('Going to trigger the Acceptance Pipeline'){
