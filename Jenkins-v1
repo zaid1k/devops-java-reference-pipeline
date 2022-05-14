@@ -1,55 +1,62 @@
 pipeline{
-agent any
-// in order to run mvn we ned to define tools section
-tools {
-maven 'mvn'
-}
+    agent {
+      label 'docker'
+    }
+    tools {
+      maven 'mvn'
+    }
     stages{
-        stage('Build Stage'){
-            steps{
-                echo "Building the Project"
-                // standar code to built any "mvn" like a project
-                // it will download various depedency so no need to worry
+    	stage('Build'){
+    		steps{
+                echo "Starting Build stage"
                 sh 'mvn clean package'
             }
-            //if the above step is sucesful then run the below steps
             post{
-             success {
-              echo "My project was built succesfully"
-  //we will used in built plugins of jenkins to run the test to archive the ".jar" in workspaces
-              junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
- //archiving the jar file from the workspaces
- //generating reports of .jAR archive
- 
-              archiveArtifacts 'target/*.jar'
-             }
-             failure{
-             // send some email to the group,for this we need to setup smtp server
-             echo "My project had compilation issue"
-             }
+                success{
+                    echo "Build completed"
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                     archiveArtifacts 'target/*.jar'
+                }
             }
-        }
-        stage('Static Code Analysis'){
-            steps{    
-                echo "Analyzing the code with Sonar"
-                withSonarQubeEnv('sonarqube'){
-                sh "mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar"
+    	}
+
+
+        stage('Sonar Coverage Analysis'){
+            steps{
+                echo("Starting Sonar Coverage Analysis")
+                 withSonarQubeEnv('sonarqube'){
+                  sh "mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar"
+                }
+            }
+            post{
+                success{
+                    echo "Sonar Coverage Analysis completed"
                 }
             }
         }
-        stage('Build a Docker Image'){
+
+
+
+        stage('Docker Image'){
             steps{
-                echo "Building the docker Image"
-                sh "docker build -t arunstivari/userservice:1.0 ."
+                echo "Creating Docker Image"
+                sh "docker build -t arunstiwari/userservice:1.0 ."
+            }
+            post{
+                success{
+                    echo "Docker Image Created"
+                }
             }
         }
-        stage('Going to trigger the Acceptance Pipeline'){
-            steps{
-                echo "Going to trigger the Acceptance Pipeline"
-                build job: 'equity-acceptance-pipeline'
-            
-            }
-        }
+
+
+         stage('Acceptance Pipeline Trigger'){
+             steps{
+                 echo "Triggering Acceptance Pipeline"
+                 script{
+                     build job: 'acceptance-pipeline'
+                 }
+             }
+         }
     }
 }
-
